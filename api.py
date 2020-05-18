@@ -1,4 +1,5 @@
 import requests
+import matplotlib.pyplot as plt
 
 class Car:
     mileage = None
@@ -7,13 +8,13 @@ class Car:
     title = None
 
     def __init__(self, mileage, price, year, title):
-        self.mileage = mileage
-        self.price = price
-        self.year = year
+        self.mileage = int(mileage)
+        self.price = int(price)
+        self.year = int(year)
         self.title = title
     
     def summary(self):
-        print(mileage + "\t" + price + "\t" + year + "\t" + title)
+        print(str(self.mileage) + "\t" + str(self.price) + "\t" + str(self.year) + "\t" + self.title)
 
 
 def getPageContents(url):
@@ -46,7 +47,7 @@ def processingPage(html):
         if line.find("<span itemprop=\"itemOffered\">") > 0 or line.find("<span class=\"result-title\">") > 0:
             nextTitle = True
         if line.find("<span class=\"price-amount\">") > 0:
-            price.append(line.strip(" ")[28: -7])
+            price.append(line.strip(" ")[28: -7].replace(",", ""))
     
     return mileage, price, year, title
 
@@ -58,24 +59,47 @@ def listsToObjects(mileage, price, year, title):
     return cars
 
 
-# ------------------- MAIN METHOD -------------------
-url = "https://www.autotrader.ca/cars/bmw/3%20series/on/burlington/?rcp=15&rcs=0&srt=4&prx=100&prv=Ontario&loc=l7l3x5&hprc=True&wcp=True&sts=New-Used&inMarket=basicSearch"
+def visualize(cars):
+    fig = plt.figure(figsize=(20,10))
+    ax = fig.add_subplot(111, projection='3d')
 
-#url = input("Input filtered URL: ")
+    for car in cars:
+        ax.scatter(car.year, car.mileage, car.price, color="r")
+
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Mileage')
+    ax.set_zlabel('Price')
+
+    plt.show()
+
+
+# ------------------- MAIN METHOD -------------------
+
+# User input of URL (or constant url for 3-series to test)
+url = "https://www.autotrader.ca/cars/bmw/3%20series/on/burlington/?rcp=15&rcs=0&srt=4&prx=100&prv=Ontario&loc=l7l3x5&hprc=True&wcp=True&sts=New-Used&inMarket=basicSearch"
+# url = input("Input filtered URL: ")
 
 # Getting initial rcs value
 rcs = int(url[url.find("rcp="):][4:url[url.find("rcp="):].find("&")])
 url = url.replace(url[url.find("rcs="):][:url[url.find("rcs="):].find("&") + 1], "") + "&rcs=" + str(rcs)
-multiplier = 0
+rcs = 15
 total = []
 
-for i in range (1, 50):
+# Optional user pages
+pages = 50
+# pages = int(input("Number of pages:")) - 1
+
+# Looping through x top pages
+for i in range (0, pages):
     # Loop through all pages
     url = url[:url.find("&rcs")] + "&rcs=" + str(rcs * i)
+    print(url)
     html = getPageContents(url)
-    mileage, price, year, title = processingPage(html)
-    cars = listsToObjects(mileage, price, year, title)
-    total.extend(cars)
+    total.extend(listsToObjects(processingPage(html)[0], processingPage(html)[1], processingPage(html)[2], processingPage(html)[3]))
 
-for model in total:
-    print(model[0].mileage, model[0].price, model[0].year, model[0].title)
+# Debugging line
+# for i in range(0, 100):
+#     total[i].summary()
+
+# MACHINE LEARNING
+visualize(total)
