@@ -11,6 +11,9 @@ class Car:
         self.price = price
         self.year = year
         self.title = title
+    
+    def summary(self):
+        print(mileage + "\t" + price + "\t" + year + "\t" + title)
 
 
 def getPageContents(url):
@@ -60,12 +63,19 @@ url = "https://www.autotrader.ca/cars/bmw/3%20series/on/burlington/?rcp=15&rcs=0
 
 #url = input("Input filtered URL: ")
 
-rcp = int(url[url.find("rcs="):][4:url[url.find("rcs="):].find("&")])
-url = url.replace(url[url.find("rcs="):][:url[url.find("rcs="):].find("&") + 1], "") + "&rcs=" + str(rcp)
-print(url)
+# Getting initial rcs value
+rcs = int(url[url.find("rcp="):][4:url[url.find("rcp="):].find("&")])
+url = url.replace(url[url.find("rcs="):][:url[url.find("rcs="):].find("&") + 1], "") + "&rcs=" + str(rcs)
+multiplier = 0
+total = []
 
-# html = getPageContents(url)
-# mileage, price, year, title = processingPage(html)
-# cars = listsToObjects(mileage, price, year, title)
-# for car in cars:
-#     print(car.title)
+for i in range (1, 50):
+    # Loop through all pages
+    url = url[:url.find("&rcs")] + "&rcs=" + str(rcs * i)
+    html = getPageContents(url)
+    mileage, price, year, title = processingPage(html)
+    cars = listsToObjects(mileage, price, year, title)
+    total.extend(cars)
+
+for model in total:
+    print(model[0].mileage, model[0].price, model[0].year, model[0].title)
